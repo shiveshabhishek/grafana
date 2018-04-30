@@ -117,10 +117,28 @@ func setIndexViewData(c *m.ReqContext) (*dtos.IndexViewData, error) {
 		Children: dashboardChildNavs,
 	})
 
+	if setting.ExploreEnabled {
+		data.NavTree = append(data.NavTree, &dtos.NavLink{
+			Text:     "Explore",
+			Id:       "explore",
+			SubTitle: "Explore your data",
+			Icon:     "fa fa-rocket",
+			Url:      setting.AppSubUrl + "/explore",
+			Children: []*dtos.NavLink{
+				{Text: "New tab", Icon: "gicon gicon-dashboard-new", Url: setting.AppSubUrl + "/explore"},
+			},
+		})
+	}
+
 	if c.IsSignedIn {
+		// Only set login if it's different from the name
+		var login string
+		if c.SignedInUser.Login != c.SignedInUser.NameOrFallback() {
+			login = c.SignedInUser.Login
+		}
 		profileNode := &dtos.NavLink{
 			Text:         c.SignedInUser.NameOrFallback(),
-			SubTitle:     c.SignedInUser.Login,
+			SubTitle:     login,
 			Id:           "profile",
 			Img:          data.User.GravatarUrl,
 			Url:          setting.AppSubUrl + "/profile",
@@ -284,6 +302,7 @@ func setIndexViewData(c *m.ReqContext) (*dtos.IndexViewData, error) {
 
 	data.NavTree = append(data.NavTree, &dtos.NavLink{
 		Text:         "Help",
+		SubTitle:     fmt.Sprintf(`%s v%s (%s)`, setting.ApplicationName, setting.BuildVersion, setting.BuildCommit),
 		Id:           "help",
 		Url:          "#",
 		Icon:         "gicon gicon-question",
